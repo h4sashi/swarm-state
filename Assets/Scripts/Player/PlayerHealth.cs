@@ -45,6 +45,8 @@ public class PlayerHealth : MonoBehaviour, IDamageable, IHealth, IConfigurable<P
         if (isInvulnerable || !IsAlive) return;
 
         currentHealth = Mathf.Max(0, currentHealth - Mathf.RoundToInt(damage));
+        FindObjectOfType<Hanzo.Utils.ScreenShake>()?.TriggerShake();
+
         OnHealthChanged?.Invoke(currentHealth);
 
         if (currentHealth <= 0)

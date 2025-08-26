@@ -163,8 +163,10 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
             {
                 enemy.TakeDamage(config.dashDamage);
                 GameEvents.OnEnemyKilled?.Invoke(other.gameObject);
-                
-                    Debug.Log($"DASH HIT: Damaged {other.gameObject.name} for {config.dashDamage} damage.");
+
+                Debug.Log($"DASH HIT: Damaged {other.gameObject.name} for {config.dashDamage} damage.");
+                    FindObjectOfType<Hanzo.Utils.ScreenShake>()?.TriggerShake(0.15f, 0.1f);
+
                 
             }
         }
