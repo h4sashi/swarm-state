@@ -8,6 +8,7 @@ public static class GameEvents
     public static Action<int> OnPlayerHealthChanged;
     public static Action OnPlayerDeath;
     public static Action<float> OnDashCooldownUpdate;
+     public static Action<Color32, float>  OnScreenFlash;
     
     // Combat Events
     public static Action<GameObject> OnEnemyKilled;
