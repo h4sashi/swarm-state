@@ -2,8 +2,6 @@ using UnityEngine;
 
 namespace Hanzo.Utils
 {
-
-
     public class BillboardUI : MonoBehaviour
     {
         private Camera mainCam;

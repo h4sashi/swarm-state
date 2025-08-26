@@ -1,8 +1,7 @@
 using UnityEngine;
 namespace Hanzo.Utils
 {
-
-
+    // Simple screen shake effect for camera or UI elements 
     public class ScreenShake : MonoBehaviour
     {
         [Header("Settings")]
@@ -12,6 +11,7 @@ namespace Hanzo.Utils
         private Vector3 originalPos;
         private float shakeDuration = 0f;
         private float shakeMagnitude = 0.2f;
+        private bool isShaking = false;
 
         void Awake()
         {
@@ -20,17 +20,16 @@ namespace Hanzo.Utils
 
         void Update()
         {
-            if (shakeDuration > 0)
+            if (isShaking && shakeDuration > 0)
             {
-                // Random offset in a circle
                 Vector2 offset = Random.insideUnitCircle * shakeMagnitude;
                 transform.localPosition = originalPos + new Vector3(offset.x, offset.y, 0);
 
                 shakeDuration -= Time.deltaTime;
             }
-            else
+            else if (isShaking) // shaking just ended
             {
-                // Reset when done
+                isShaking = false;
                 transform.localPosition = originalPos;
             }
         }
@@ -40,8 +39,10 @@ namespace Hanzo.Utils
         /// </summary>
         public void TriggerShake(float duration, float magnitude)
         {
+            originalPos = transform.localPosition; // cache fresh origin in case camera moved
             shakeDuration = duration;
             shakeMagnitude = magnitude;
+            isShaking = true;
         }
 
         /// <summary>
