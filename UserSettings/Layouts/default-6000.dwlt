@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_PixelRect:
     serializedVersion: 2
-    x: 0
+    x: 240
     y: 53
     width: 1440
     height: 794
@@ -1001,9 +1001,9 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: -55.11855, y: 3.2821999, z: -44.80662}
+    m_Target: {x: -55.21235, y: 0.591373, z: -45.64654}
     speed: 2
-    m_Value: {x: -55.11855, y: 3.2821999, z: -44.80662}
+    m_Value: {x: -55.21235, y: 0.591373, z: -45.64654}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -1049,13 +1049,13 @@ MonoBehaviour:
     m_GridAxis: 1
     m_gridOpacity: 1
   m_Rotation:
-    m_Target: {x: 0.0041889586, y: 0.029093044, z: 0.00012215042, w: -0.99956876}
+    m_Target: {x: -0.18725665, y: 0.62113094, z: -0.15616108, w: -0.744813}
     speed: 2
-    m_Value: {x: 0.0041889586, y: 0.029093044, z: 0.00012215042, w: -0.99956876}
+    m_Value: {x: -0.18725665, y: 0.62113094, z: -0.15616108, w: -0.74481297}
   m_Size:
-    m_Target: 1.278641
+    m_Target: 4.877616
     speed: 2
-    m_Value: 1.278641
+    m_Value: 4.877616
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -1532,7 +1532,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 81}
     m_SelectedIDs: 00c10000
     m_LastClickedID: 49408
-    m_ExpandedIDs: 00000000b0b40000
+    m_ExpandedIDs: 00000000f8b40000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1561,7 +1561,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000b0b40000
+    m_ExpandedIDs: 00000000f8b40000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 

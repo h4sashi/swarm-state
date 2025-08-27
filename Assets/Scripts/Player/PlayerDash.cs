@@ -2,25 +2,27 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+
+[RequireComponent(typeof(DashFXController))]
 public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<PlayerConfig>
 {
     [SerializeField] private PlayerConfig config;
     [SerializeField] private LayerMask enemyLayerMask = 1 << 6;
-    
+
     [Header("Effects")]
     [SerializeField] private DashFXController dashFX;
     [SerializeField] private bool autoCreateFXController = true;
-    
+
     private IMovementController movement;
     private Rigidbody rb;
     private float lastDashTime;
     private bool isDashing;
     private Coroutine dashCoroutine;
-    
+
     // Debug variables
     [SerializeField] private bool debugMode = true;
     private Vector3 dashStartPos;
-    
+
     // Interface Properties
     public bool IsDashing => isDashing;
     public bool CanDash => Time.time >= lastDashTime + config.dashCooldown;
@@ -29,7 +31,7 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
     public float CooldownProgress => DashCooldownProgress;
     public string AbilityName => "Dash";
     public PlayerConfig Config { get => config; set => config = value; }
-    
+
     // Public access to FX controller
     public DashFXController FXController => dashFX;
 
@@ -46,7 +48,7 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
         {
             Debug.LogError("PlayerDash: No IMovementController found!");
         }
-        
+
         StartCoroutine(UpdateCooldownUI());
         ApplyConfig();
     }
@@ -56,7 +58,7 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
         if (dashFX == null)
         {
             dashFX = GetComponent<DashFXController>();
-            
+
             if (dashFX == null && autoCreateFXController)
             {
                 dashFX = gameObject.AddComponent<DashFXController>();
@@ -66,7 +68,7 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
                 }
             }
         }
-        
+
         if (dashFX != null)
         {
             // Subscribe to FX events if needed
@@ -98,21 +100,21 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
     {
         lastDashTime = Time.time;
         dashStartPos = transform.position;
-        
+
         if (dashCoroutine != null)
             StopCoroutine(dashCoroutine);
-        
+
         // Start FX using modular system
         if (dashFX != null)
         {
             dashFX.StartDashEffects();
         }
-        
+
         if (debugMode)
         {
             Debug.Log($"DASH START: Position={transform.position}, Direction={direction}, Speed={config.dashSpeed}");
         }
-        
+
         dashCoroutine = StartCoroutine(DashSequence(direction));
         GameEvents.OnPlayerDash?.Invoke(transform.position);
     }
@@ -129,7 +131,7 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
             Debug.Log("PlayerDash: FX effects started");
         }
     }
-    
+
     private void OnDashFXEnded()
     {
         if (debugMode)
@@ -142,19 +144,19 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
     public void ApplyConfig()
     {
         if (config == null) return;
-        
+
         // Update FX settings based on dash config
         if (dashFX != null)
         {
             var fxSettings = dashFX.Settings;
-            
+
             // Sync trail duration with dash duration
             fxSettings.trailDuration = Mathf.Max(fxSettings.trailDuration, config.dashDuration * 1.2f);
-            
+
             // You could also sync other settings here based on your config
             // fxSettings.volume = config.dashSoundVolume;
             // fxSettings.trailStartColor = config.dashColor;
-            
+
             dashFX.UpdateSettings(fxSettings);
         }
     }
@@ -164,56 +166,56 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
     {
         isDashing = true;
         movement.CanMove = false; // Stop normal movement
-        
+
         // Store original values
         float originalDrag = rb.linearDamping;
         Vector3 originalVelocity = rb.linearVelocity;
-        
+
         // Zero out drag for consistent dash
         rb.linearDamping = 0f;
-        
+
         if (debugMode)
         {
             Debug.Log($"DASH SEQUENCE START: OriginalDrag={originalDrag}, Direction={direction}");
         }
-        
+
         float elapsedTime = 0f;
-        
+
         while (elapsedTime < config.dashDuration)
         {
             float normalizedTime = elapsedTime / config.dashDuration;
             float curveValue = config.dashCurve.Evaluate(normalizedTime);
-            
+
             // Calculate dash velocity
             Vector3 dashVelocity = direction * config.dashSpeed * curveValue;
-            
+
             // FORCE the velocity - don't let anything override it
             rb.linearVelocity = new Vector3(dashVelocity.x, rb.linearVelocity.y, dashVelocity.z);
-            
+
             if (debugMode && elapsedTime < 0.05f) // Log first few frames
             {
                 Debug.Log($"DASH FRAME: Time={elapsedTime:F3}, Curve={curveValue:F2}, Velocity={rb.linearVelocity}, Position={transform.position}");
             }
-            
+
             elapsedTime += Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();
         }
-        
+
         // Restore original settings
         rb.linearDamping = originalDrag;
-        
+
         // Stop FX using modular system
         if (dashFX != null)
         {
             dashFX.StopDashEffects();
         }
-        
+
         if (debugMode)
         {
             float distanceTraveled = Vector3.Distance(dashStartPos, transform.position);
             Debug.Log($"DASH COMPLETE: Distance={distanceTraveled:F2}, Expected≈{config.dashSpeed * config.dashDuration:F2}");
         }
-        
+
         isDashing = false;
         movement.CanMove = true;
         dashCoroutine = null;
@@ -239,7 +241,7 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
                 GameEvents.OnEnemyKilled?.Invoke(other.gameObject);
 
                 Debug.Log($"DASH HIT: Damaged {other.gameObject.name} for {config.dashDamage} damage.");
-                
+
                 // Use the existing screen shake or let the FX controller handle it
                 if (dashFX != null && dashFX.Settings.enableScreenShake)
                 {
@@ -273,16 +275,16 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
             dashFX.UpdateSettings(settings);
         }
     }
-    
+
     /// <summary>
     /// Enable/disable specific effects
     /// </summary>
     public void SetEffectEnabled(string effectType, bool enabled)
     {
         if (dashFX == null) return;
-        
+
         var settings = dashFX.Settings;
-        
+
         switch (effectType.ToLower())
         {
             case "trail":
@@ -301,24 +303,24 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
                 settings.enableFlash = enabled;
                 break;
         }
-        
+
         dashFX.UpdateSettings(settings);
     }
-    
+
     /// <summary>
     /// Get reference to specific FX component
     /// </summary>
     public T GetFXComponent<T>() where T : Component
     {
         if (dashFX == null) return null;
-        
+
         if (typeof(T) == typeof(TrailRenderer))
             return dashFX.Trail as T;
         else if (typeof(T) == typeof(AudioSource))
             return dashFX.Audio as T;
         else if (typeof(T) == typeof(ParticleSystem))
             return dashFX.Particles as T;
-        
+
         return null;
     }
     #endregion
@@ -327,7 +329,7 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
     {
         if (dashCoroutine != null)
             StopCoroutine(dashCoroutine);
-            
+
         // Unsubscribe from FX events
         if (dashFX != null)
         {
@@ -337,7 +339,7 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
     }
 
     #region Editor Utilities
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     [ContextMenu("Test Dash Effects Only")]
     private void TestDashEffectsOnly()
     {
@@ -347,13 +349,13 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
             StartCoroutine(TestFXSequence());
         }
     }
-    
+
     private IEnumerator TestFXSequence()
     {
         yield return new WaitForSeconds(1f);
         if (dashFX != null)
             dashFX.StopDashEffects();
     }
-    #endif
+#endif
     #endregion
 }

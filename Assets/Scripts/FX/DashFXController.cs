@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 [System.Serializable]
 public class DashFXSettings
@@ -37,10 +38,13 @@ public class DashFXSettings
     public float shakeDuration = 0.2f;
     public float shakeIntensity = 0.35f;
     
-    [Header("Additional Effects")]
+    [Header("Flash Effects")]
     public bool enableFlash = false;
+    public Image flashImage; // Assign your own flash image here
     public Color flashColor = Color.white;
     public float flashDuration = 0.1f;
+    public float flashIntensity = 0.8f;
+    public AnimationCurve flashCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 }
 
 /// <summary>
@@ -56,6 +60,8 @@ public class DashFXController : MonoBehaviour
     private TrailRenderer trailRenderer;
     private AudioSource audioSource;
     private ParticleSystem particles;
+    
+    // Flash image is now assigned directly in settings
     
     // State tracking
     private bool isEffectActive = false;
@@ -77,6 +83,7 @@ public class DashFXController : MonoBehaviour
     public TrailRenderer Trail => trailRenderer;
     public AudioSource Audio => audioSource;
     public ParticleSystem Particles => particles;
+    public Image FlashImage => fxSettings.flashImage;
     #endregion
     
     #region Initialization
@@ -100,6 +107,9 @@ public class DashFXController : MonoBehaviour
             
         if (fxSettings.enableParticles)
             SetupParticleSystem();
+            
+        if (fxSettings.enableFlash && fxSettings.flashImage != null)
+            SetupFlashSystem();
     }
     
     private void SetupTrailRenderer()
@@ -170,6 +180,22 @@ public class DashFXController : MonoBehaviour
         
         if (particles != null)
             ConfigureParticleSystem();
+    }
+    
+    private void SetupFlashSystem()
+    {
+        if (fxSettings.flashImage != null)
+        {
+            ConfigureFlashSystem();
+            
+            if (debugMode)
+                Debug.Log($"[DashFX] Using assigned flash image: {fxSettings.flashImage.name}");
+        }
+        else
+        {
+            if (debugMode)
+                Debug.LogWarning($"[DashFX] Flash enabled but no flash image assigned on {name}");
+        }
     }
     #endregion
     
@@ -252,6 +278,26 @@ public class DashFXController : MonoBehaviour
         
         if (debugMode)
             Debug.Log($"[DashFX] Created ParticleSystem on {name}");
+    }
+    
+    private void ConfigureFlashSystem()
+    {
+        if (fxSettings.flashImage == null) return;
+        
+        // Store original color if we haven't already
+        if (!fxSettings.flashImage.gameObject.activeInHierarchy)
+        {
+            fxSettings.flashImage.gameObject.SetActive(true);
+        }
+        
+        // Set initial state
+        Color flashColorWithAlpha = fxSettings.flashColor;
+        flashColorWithAlpha.a = 0f; // Start transparent
+        fxSettings.flashImage.color = flashColorWithAlpha;
+        fxSettings.flashImage.raycastTarget = false; // Don't block UI interactions
+        
+        // Keep the image active but transparent
+        fxSettings.flashImage.gameObject.SetActive(true);
     }
     
     private Material CreateURPTrailMaterial()
@@ -358,6 +404,9 @@ public class DashFXController : MonoBehaviour
             
         if (fxSettings.enableParticles && particles != null)
             ConfigureParticleSystem();
+            
+        if (fxSettings.enableFlash && fxSettings.flashImage != null)
+            ConfigureFlashSystem();
     }
     
     /// <summary>
@@ -386,6 +435,13 @@ public class DashFXController : MonoBehaviour
         
         if (particles != null)
             particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        
+        if (fxSettings.flashImage != null)
+        {
+            Color resetColor = fxSettings.flashColor;
+            resetColor.a = 0f;
+            fxSettings.flashImage.color = resetColor;
+        }
         
         isEffectActive = false;
     }
@@ -436,12 +492,18 @@ public class DashFXController : MonoBehaviour
         }
     }
     
-    private void StartFlashEffect()
+    internal void StartFlashEffect()
     {
         if (flashCoroutine != null)
             StopCoroutine(flashCoroutine);
-            
-        flashCoroutine = StartCoroutine(FlashEffect());
+        
+        if (fxSettings.flashImage != null)
+        {
+            flashCoroutine = StartCoroutine(LocalFlashEffect());
+        }
+        
+        // Also trigger the GameEvents flash for other systems that might be listening
+        GameEvents.OnScreenFlash?.Invoke(fxSettings.flashColor, fxSettings.flashDuration);
     }
     #endregion
     
@@ -476,13 +538,30 @@ public class DashFXController : MonoBehaviour
         trailFadeCoroutine = null;
     }
     
-    private IEnumerator FlashEffect()
+    private IEnumerator LocalFlashEffect()
     {
-        // This would integrate with your UI flash system
-        // For now, just a placeholder that could trigger UI flash
-        GameEvents.OnScreenFlash?.Invoke(fxSettings.flashColor, fxSettings.flashDuration);
+        if (fxSettings.flashImage == null) yield break;
         
-        yield return new WaitForSeconds(fxSettings.flashDuration);
+        float timer = 0f;
+        Color flashColorWithAlpha = fxSettings.flashColor;
+        
+        // Flash in and out using the animation curve
+        while (timer < fxSettings.flashDuration)
+        {
+            float normalizedTime = timer / fxSettings.flashDuration;
+            float curveValue = fxSettings.flashCurve.Evaluate(normalizedTime);
+            
+            // Apply intensity and curve to alpha
+            flashColorWithAlpha.a = curveValue * fxSettings.flashIntensity;
+            fxSettings.flashImage.color = flashColorWithAlpha;
+            
+            timer += Time.unscaledDeltaTime; // Use unscaled time to work during pause
+            yield return null;
+        }
+        
+        // Ensure flash is completely transparent at the end
+        flashColorWithAlpha.a = 0f;
+        fxSettings.flashImage.color = flashColorWithAlpha;
         
         flashCoroutine = null;
     }
@@ -512,6 +591,15 @@ public class DashFXController : MonoBehaviour
         if (Application.isPlaying)
             ForceStopAllEffects();
     }
+    
+    [ContextMenu("Test Flash Effect")]
+    private void TestFlashEffect()
+    {
+        if (Application.isPlaying && fxSettings.enableFlash)
+        {
+            StartFlashEffect();
+        }
+    }
     #endif
     #endregion
     
@@ -533,5 +621,22 @@ public static class DashFXExtensions
         if (dashFX == null)
             dashFX = gameObject.AddComponent<DashFXController>();
         return dashFX;
+    }
+    
+    /// <summary>
+    /// Trigger a quick flash effect on any GameObject with DashFXController
+    /// </summary>
+    public static void TriggerFlash(this GameObject gameObject, Color flashColor, float duration = 0.1f, float intensity = 0.8f)
+    {
+        var dashFX = gameObject.GetOrAddDashFX();
+        if (dashFX.Settings.enableFlash)
+        {
+            var tempSettings = dashFX.Settings;
+            tempSettings.flashColor = flashColor;
+            tempSettings.flashDuration = duration;
+            tempSettings.flashIntensity = intensity;
+            dashFX.UpdateSettings(tempSettings);
+            dashFX.StartFlashEffect();
+        }
     }
 }
