@@ -17,7 +17,7 @@ MonoBehaviour:
   deceleration: 8
   dashSpeed: 34.5
   dashDuration: 0.5
-  dashCooldown: 0
+  dashCooldown: 2.1
   dashCurve:
     serializedVersion: 2
     m_Curve:
