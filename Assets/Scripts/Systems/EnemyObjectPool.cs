@@ -282,28 +282,43 @@ namespace Enemies.Pooling
         
         #region Enemy State Management
         
-        private void PrepareEnemyForSpawn(GameObject enemyObj, Vector3 position, EnemyConfig scaledConfig = null)
+       private void PrepareEnemyForSpawn(GameObject enemyObj, Vector3 position, EnemyConfig scaledConfig = null)
+{
+    // Set position and rotation
+    enemyObj.transform.position = position;
+    enemyObj.transform.rotation = Quaternion.identity;
+    
+    // Activate the enemy first so NavMeshAgent can function properly
+    enemyObj.SetActive(true);
+    
+    // Handle NavMeshAgent positioning
+    var navAgent = enemyObj.GetComponent<UnityEngine.AI.NavMeshAgent>();
+    if (navAgent != null)
+    {
+        navAgent.enabled = false; // Disable temporarily
+        navAgent.enabled = true;  // Re-enable to refresh NavMesh placement
+        
+        // Try to warp to position if on NavMesh
+        if (navAgent.isOnNavMesh)
         {
-            // Set position and rotation
-            enemyObj.transform.position = position;
-            enemyObj.transform.rotation = Quaternion.identity;
-            
-            // Reset and reinitialize enemy
-            EnemyController controller = enemyObj.GetComponent<EnemyController>();
-            if (controller != null)
-            {
-                // Use scaled config if provided, otherwise use original
-                EnemyConfig configToUse = scaledConfig ?? poolDataLookup[controller.EnemyType].enemyConfig;
-                controller.Initialize(configToUse);
-            }
-            
-            // Activate the enemy
-            enemyObj.SetActive(true);
-            
-            // Notify poolable component
-            IPoolable poolable = enemyObj.GetComponent<IPoolable>();
-            poolable?.OnSpawnFromPool();
+            navAgent.Warp(position);
+            navAgent.isStopped = false;
         }
+    }
+    
+    // Reset and reinitialize enemy
+    EnemyController controller = enemyObj.GetComponent<EnemyController>();
+    if (controller != null)
+    {
+        // Use scaled config if provided, otherwise use original
+        EnemyConfig configToUse = scaledConfig ?? poolDataLookup[controller.EnemyType].enemyConfig;
+        controller.Initialize(configToUse);
+    }
+    
+    // Notify poolable component
+    IPoolable poolable = enemyObj.GetComponent<IPoolable>();
+    poolable?.OnSpawnFromPool();
+}
         
         private void ResetEnemyToPoolState(GameObject enemyObj)
         {
@@ -337,55 +352,66 @@ namespace Enemies.Pooling
             poolable?.OnReturnToPool();
         }
         
-        private void ResetVisualState(GameObject enemyObj)
+       private void ResetVisualState(GameObject enemyObj)
+{
+    // Reset renderer materials and colors
+    var renderer = enemyObj.GetComponent<MeshRenderer>();
+    if (renderer != null)
+    {
+        EnemyController controller = enemyObj.GetComponent<EnemyController>();
+        if (controller != null && controller.Config != null)
         {
-            // Reset renderer materials and colors
-            var renderer = enemyObj.GetComponent<MeshRenderer>();
-            if (renderer != null)
-            {
-                EnemyController controller = enemyObj.GetComponent<EnemyController>();
-                if (controller != null && controller.Config != null)
-                {
-                    // Reset scale
-                    enemyObj.transform.localScale = controller.Config.scale;
-                    
-                    // Reset material color if needed
-                    if (renderer.material.HasProperty("_Color"))
-                    {
-                        Color resetColor = controller.Config.enemyColor;
-                        resetColor.a = 1f; // Ensure full opacity
-                        renderer.material.color = resetColor;
-                    }
-                }
-            }
+            // Reset scale
+            enemyObj.transform.localScale = controller.Config.scale;
             
-            // Re-enable colliders and physics
-            var colliders = enemyObj.GetComponents<Collider>();
-            foreach (var collider in colliders)
+            // Reset material color if needed
+            if (renderer.material.HasProperty("_Color"))
             {
-                if (collider != null)
-                {
-                    collider.enabled = true;
-                }
-            }
-            
-            var rigidbody = enemyObj.GetComponent<Rigidbody>();
-            if (rigidbody != null)
-            {
-                rigidbody.isKinematic = false;
-                rigidbody.detectCollisions = true;
-                rigidbody.linearVelocity = Vector3.zero;
-                rigidbody.angularVelocity = Vector3.zero;
-            }
-            
-            // Re-enable NavMeshAgent
-            var navAgent = enemyObj.GetComponent<UnityEngine.AI.NavMeshAgent>();
-            if (navAgent != null)
-            {
-                navAgent.enabled = true;
-                navAgent.isStopped = false;
+                Color resetColor = controller.Config.enemyColor;
+                resetColor.a = 1f; // Ensure full opacity
+                renderer.material.color = resetColor;
             }
         }
+    }
+    
+    // Re-enable colliders and physics
+    var colliders = enemyObj.GetComponents<Collider>();
+    foreach (var collider in colliders)
+    {
+        if (collider != null)
+        {
+            collider.enabled = true;
+        }
+    }
+    
+    var rigidbody = enemyObj.GetComponent<Rigidbody>();
+    if (rigidbody != null)
+    {
+        rigidbody.isKinematic = false;
+        rigidbody.detectCollisions = true;
+        rigidbody.linearVelocity = Vector3.zero;
+        rigidbody.angularVelocity = Vector3.zero;
+    }
+    
+    // Handle NavMeshAgent carefully
+    var navAgent = enemyObj.GetComponent<UnityEngine.AI.NavMeshAgent>();
+    if (navAgent != null)
+    {
+        // Only modify NavMeshAgent if it's properly initialized
+        if (navAgent.isOnNavMesh)
+        {
+            navAgent.enabled = true;
+            navAgent.isStopped = false;
+            navAgent.ResetPath();
+        }
+        else
+        {
+            // If not on NavMesh, just ensure it's enabled for later use
+            navAgent.enabled = true;
+            // Don't set isStopped if not on NavMesh as it will cause the error
+        }
+    }
+}
         
         #endregion
         
