@@ -18,5 +18,5 @@ MonoBehaviour:
   targetLayers:
     serializedVersion: 2
     m_Bits: 128
-  projectileColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  projectileColor: {r: 1, g: 0.47900525, b: 0.015686274, a: 1}
   scale: {x: 0.2, y: 0.2, z: 0.2}

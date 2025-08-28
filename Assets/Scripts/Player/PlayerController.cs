@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -22,6 +23,8 @@ public class PlayerController : MonoBehaviour
     [Header("Visual Feedback")]
     [SerializeField] private GameObject dashTrailEffect;
     [SerializeField] private ParticleSystem deathParticles;
+    [SerializeField]private PlayerDashUI playerDashUI;
+
     
     private PlayerInput playerInput;
     
@@ -29,7 +32,9 @@ public class PlayerController : MonoBehaviour
     {
         // Auto-assign concrete components
         if (!movementComponent) movementComponent = GetComponent<PlayerMovement>();
-        if (!dashComponent) dashComponent = GetComponent<PlayerDash>();
+         if (!dashComponent) dashComponent = GetComponent<PlayerDash>();
+        StartCoroutine(enableDash());
+         if (!dashComponent) dashComponent = GetComponent<PlayerDash>();
         if (!healthComponent) healthComponent = GetComponent<PlayerHealth>();
         
         // Cast to interfaces for internal use
@@ -44,8 +49,15 @@ public class PlayerController : MonoBehaviour
             Debug.LogError("PlayerConfig is not assigned!");
         }
     }
+
+    IEnumerator enableDash()
+    {
+        yield return new WaitForSeconds(1.0f);
+        playerDashUI.enabled = true;
+       
+    }
     
-    void Start()
+    void OnEnable()
     {
         // Subscribe to interface events as well as game events
         health.OnDeath += OnPlayerDeath;

@@ -41,6 +41,7 @@ namespace Enemies.Core
 
        private void Die()
         {
+            SoundManager.Instance.PlayEnemyDamageSound();
             if (IsAlive) return;
 
             // Switch state if state machine exists

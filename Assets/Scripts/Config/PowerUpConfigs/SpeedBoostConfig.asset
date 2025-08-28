@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bde70bb62745450f9de7351590aef87, type: 3}
+  m_Name: SpeedBoostConfig
+  m_EditorClassIdentifier: 
+  powerUpType: 0
+  displayName: Speed Power Up
+  icon: {fileID: 0}
+  duration: 10
+  isStackable: 1
+  maxStacks: 3
+  stacksExtendDuration: 1
+  speedMultiplier: 1.5
+  dashCooldownReduction: 0.5
+  bonusDashCharges: 1
+  shieldDuration: 5
+  healthRegenAmount: 1
+  healthRegenInterval: 2
+  pickupEffect: {fileID: 0}
+  activeEffect: {fileID: 0}
+  pickupSound: {fileID: 0}
+  glowColor: {r: 1, g: 0.7038869, b: 0, a: 1}
+  spawnChance: 0.4
+  prefab: {fileID: 2114743551381627673, guid: c25b2cb9ae2b04c31a31f0dce6faa059, type: 3}

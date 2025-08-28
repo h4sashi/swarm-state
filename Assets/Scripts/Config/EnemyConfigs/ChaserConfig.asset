@@ -32,5 +32,5 @@ MonoBehaviour:
   idleTime: 2
   canPatrol: 0
   patrolRadius: 5
-  enemyColor: {r: 1, g: 0, b: 0, a: 1}
+  enemyColor: {r: 0, g: 0.550797, b: 1, a: 1}
   scale: {x: 1, y: 1, z: 1}

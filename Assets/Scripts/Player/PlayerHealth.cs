@@ -52,8 +52,9 @@ public class PlayerHealth : MonoBehaviour, IDamageable, IHealth, IConfigurable<P
     
     public void TakeDamage(float damage)
     {
+        SoundManager.Instance.PlayPlayerDamageSound();
         // Check if player is invulnerable OR dashing
-        if (isInvulnerable || !IsAlive || (dashAbility != null && dashAbility.IsDashing)) 
+        if (isInvulnerable || !IsAlive || (dashAbility != null && dashAbility.IsDashing))
         {
             if (dashAbility != null && dashAbility.IsDashing)
             {
