@@ -2,6 +2,9 @@
 
 A Unity-based top-down action game built with primitives only, featuring smooth player movement, AI enemies, power-up systems, and object pooling. Created as a technical demonstration of game architecture patterns and Unity development practices.
 
+## 🎮 Game Engine
+- **Unity 6000.1.1.0f1**
+
 ## 🎮 Game Features
 
 ### Core Gameplay
@@ -211,6 +214,4 @@ The architecture supports easy expansion:
 - **Object Pooling**: Unity Performance Best Practices
 - **ScriptableObject Architecture**: Unity Learn Tutorials
 
----
 
-*This project demonstrates modern Unity development practices with emphasis on clean architecture, performance, and maintainability.*
