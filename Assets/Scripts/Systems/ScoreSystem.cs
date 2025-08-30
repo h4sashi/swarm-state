@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class ScoreSystem : MonoBehaviour
 {
@@ -267,8 +268,7 @@ public class ScoreSystem : MonoBehaviour
     
     public void RestartGame()
     {
-        InitializeScoreSystem();
-        StartGame();
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
     
     public int GetCurrentScore() => currentScore;
