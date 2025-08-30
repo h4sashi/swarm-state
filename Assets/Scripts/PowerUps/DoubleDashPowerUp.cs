@@ -4,8 +4,11 @@ public class DoubleDashPowerUp : BasePowerUp
 {
     private float originalCooldown;
     private int availableCharges = 0;
-    private PlayerDash playerDash; // Direct reference to avoid repeated GetComponent calls
+    private PlayerDash playerDash;
     private bool modificationsApplied = false;
+    
+    // Track the last dash time to override cooldown calculation
+    private float lastInstantDashTime = -1f;
     
     public override void ApplyModification(PlayerController player)
     {
@@ -44,6 +47,7 @@ public class DoubleDashPowerUp : BasePowerUp
             playerDash.Config.dashCooldown = originalCooldown;
             GameEvents.OnPlayerDash -= OnDashUsed;
             availableCharges = 0;
+            lastInstantDashTime = -1f; // Reset override
             
             Debug.Log($"Double Dash removed: restored cooldown={originalCooldown}");
             
@@ -57,21 +61,30 @@ public class DoubleDashPowerUp : BasePowerUp
         if (availableCharges > 0)
         {
             availableCharges--;
-            // Force an immediate cooldown reset by temporarily modifying cooldown
-            if (playerDash != null)
-            {
-                StartCoroutine(InstantCooldownReset(playerDash));
-            }
+            
+            // Instead of modifying cooldown, override the UI calculation
+            lastInstantDashTime = Time.time;
+            
+            // Send a direct UI update to show instant availability
+            GameEvents.OnDashCooldownUpdate?.Invoke(1f); // Force UI to show ready state
+            
             Debug.Log($"Instant dash charge used! Remaining: {availableCharges}");
         }
     }
     
-    private System.Collections.IEnumerator InstantCooldownReset(PlayerDash dash)
+    // Provide custom cooldown progress that accounts for instant charges
+    public float GetModifiedCooldownProgress()
     {
-        float tempCooldown = dash.Config.dashCooldown;
-        dash.Config.dashCooldown = 0f; // Make next dash immediately available
-        yield return new WaitForFixedUpdate(); // Wait one frame
-        dash.Config.dashCooldown = tempCooldown; // Restore normal cooldown
+        if (playerDash == null) return 1f;
+        
+        // If we just used an instant charge, show as ready
+        if (lastInstantDashTime > 0f && Time.time - lastInstantDashTime < 0.1f)
+        {
+            return 1f;
+        }
+        
+        // Otherwise use normal calculation
+        return playerDash.DashCooldownProgress;
     }
     
     protected override void OnDestroy()

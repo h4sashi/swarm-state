@@ -15,19 +15,18 @@ MonoBehaviour:
   powerUpType: 1
   displayName: Dash Power Up
   icon: {fileID: 0}
-  duration: 10
+  duration: 15
   isStackable: 1
   maxStacks: 3
   stacksExtendDuration: 1
   speedMultiplier: 2
-  dashCooldownReduction: 0.8
+  dashCooldownReduction: 0.1
   bonusDashCharges: 2
   shieldDuration: 5
   healthRegenAmount: 1
   healthRegenInterval: 2
   pickupEffect: {fileID: 0}
   activeEffect: {fileID: 0}
-  pickupSound: {fileID: 0}
   glowColor: {r: 0, g: 1, b: 0.2762072, a: 1}
   spawnChance: 0.7
   prefab: {fileID: 2114743551381627673, guid: 2ab93271662c74466af5d805d98579b5, type: 3}

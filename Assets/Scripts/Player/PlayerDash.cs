@@ -27,7 +27,7 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
     public bool IsDashing => isDashing;
     public bool CanDash => Time.time >= lastDashTime + config.dashCooldown;
     public bool CanUse => CanDash;
-    public float DashCooldownProgress => Mathf.Clamp01((Time.time - lastDashTime) / config.dashCooldown);
+    // public float DashCooldownProgress => Mathf.Clamp01((Time.time - lastDashTime) / config.dashCooldown);
     public float CooldownProgress => DashCooldownProgress;
     public string AbilityName => "Dash";
     public PlayerConfig Config { get => config; set => config = value; }
@@ -358,4 +358,29 @@ public class PlayerDash : MonoBehaviour, IDashAbility, IAbility, IConfigurable<P
     }
 #endif
     #endregion
+
+
+    public float DashCooldownProgress 
+{ 
+    get 
+    { 
+        // Safety check for zero or negative cooldown
+        if (config.dashCooldown <= 0f)
+        {
+            return 1f; // Always ready if no cooldown
+        }
+        
+        float timeSinceLastDash = Time.time - lastDashTime;
+        float progress = Mathf.Clamp01(timeSinceLastDash / config.dashCooldown);
+        
+        // Additional validation to prevent NaN/Infinity
+        if (float.IsNaN(progress) || float.IsInfinity(progress))
+        {
+            Debug.LogWarning("PlayerDash: Invalid cooldown progress calculated, defaulting to ready state");
+            return 1f;
+        }
+        
+        return progress;
+    } 
+}
 }
