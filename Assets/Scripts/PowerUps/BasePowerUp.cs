@@ -9,6 +9,7 @@ public abstract class BasePowerUp : MonoBehaviour, IPowerUp, IStatModifier
     protected float remainingTime;
     protected int stackCount = 1;
     protected bool isActive = false;
+    protected bool isInitialized = false; // Track initialization state
     protected Coroutine durationCoroutine;
     protected Coroutine uiUpdateCoroutine;
     
@@ -16,35 +17,61 @@ public abstract class BasePowerUp : MonoBehaviour, IPowerUp, IStatModifier
     public System.Action OnPowerUpDeactivated { get; set; }
     
     // IAbility Implementation
-    public string AbilityName => config.displayName;
-    public bool CanUse => !isActive;
-    public float CooldownProgress => 1f - (remainingTime / config.duration);
+    public string AbilityName => config?.displayName ?? "Unknown PowerUp";
+    public bool CanUse => !isActive && isInitialized;
+    public float CooldownProgress => config != null ? 1f - (remainingTime / config.duration) : 0f;
     
     // IPowerUp Implementation
-    public PowerUpType PowerUpType => config.powerUpType;
-    public float Duration => config.duration;
+    public PowerUpType PowerUpType => config?.powerUpType ?? PowerUpType.SpeedBoost;
+    public float Duration => config?.duration ?? 0f;
     public float RemainingTime => remainingTime;
     public bool IsActive => isActive;
-    public bool IsStackable => config.isStackable;
+    public bool IsStackable => config?.isStackable ?? false;
     public int StackCount => stackCount;
     
     protected virtual void Awake()
     {
-        if (!config)
-        {
-            Debug.LogError($"PowerUp {name}: No config assigned!");
-        }
+        // Don't validate config here - it may not be assigned yet
+        // Config validation happens in Initialize()
     }
     
     public virtual void Initialize(PowerUpConfig config, PlayerController player)
     {
+        // Validate inputs
+        if (!config)
+        {
+            Debug.LogError($"PowerUp {name}: No config provided to Initialize()!");
+            return;
+        }
+        
+        if (!player)
+        {
+            Debug.LogError($"PowerUp {name}: No player provided to Initialize()!");
+            return;
+        }
+        
         this.config = config;
         this.targetPlayer = player;
         remainingTime = config.duration;
+        isInitialized = true;
+        
+        // Update the GameObject name for easier debugging
+        name = $"PowerUp_{config.displayName}";
+        
+        if (Application.isPlaying)
+        {
+            Debug.Log($"PowerUp {config.displayName} initialized successfully");
+        }
     }
     
     public virtual void Activate()
     {
+        if (!isInitialized)
+        {
+            Debug.LogError($"PowerUp {name}: Cannot activate - not properly initialized!");
+            return;
+        }
+        
         if (isActive && config.isStackable)
         {
             Stack();
